@@ -42,7 +42,7 @@ async function refreshAccessToken(token: JWT) {
 }
 
 export default NextAuth({
-    debug: true,
+    debug: false,
     callbacks: {
         async jwt({ token, account }) {
             // initial sign in

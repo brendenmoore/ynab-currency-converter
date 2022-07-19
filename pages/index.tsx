@@ -1,13 +1,14 @@
 import type { GetServerSideProps, NextPage } from 'next'
 import { getToken } from 'next-auth/jwt'
-import { signIn, signOut, useSession } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import * as ynab from 'ynab'
+import {TextField, Autocomplete, Button, Box, Container} from '@mui/material'
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const token = await getToken({ req })
   console.log(token)
   if (!token?.accessToken) {
-    return {props: {}}
+    return { props: {} }
   }
 
   const api = new ynab.API(token.accessToken)
@@ -24,29 +25,22 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   }
 }
 
-const Home: NextPage<{userData?: [ynab.AccountsResponse, ynab.CategoriesResponse, ynab.PayeesResponse]}> = (props) => {
+const Home: NextPage<{ userData?: [ynab.AccountsResponse, ynab.CategoriesResponse, ynab.PayeesResponse] }> = (props) => {
 
-  const session = useSession()
+  useSession({ required: true })
 
-  if (props.userData) {
-    return <pre>{JSON.stringify(props.userData[0].data.accounts, null, 4)}</pre>
-  }
-
-  if (session.data) {
-    return (
-      <>
-        Signed in. Session data: <br />
-        {JSON.stringify(session)}
-        <button onClick={() => signOut()}>Sign out</button>
-      </>
-    )
-  }
   return (
-    <>
-      Not signed in <br />
-      <button onClick={() => signIn('ynab')}>Sign in</button>
-    </>
+    <Container maxWidth="sm">
+      <div>
+        <Button onClick={() => signOut()}>Sign out</Button>
+      </div>
+      <TextField inputProps={{inputMode: 'numeric', pattern: '[0-9]'}} label="Transaction Amount" />
+      <br />
+      <Autocomplete disablePortal id="category-selector" options={[]} renderInput={(params) => <TextField {...params} label="Category" />}></Autocomplete>
+    </Container>
   )
+
+
 }
 
 export default Home
