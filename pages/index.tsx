@@ -1,18 +1,21 @@
 import type { GetServerSideProps, NextPage } from 'next'
 import { getToken } from 'next-auth/jwt'
 import { signIn, signOut, useSession } from 'next-auth/react'
-import Head from 'next/head'
-import { useQuery } from 'react-query'
 import * as ynab from 'ynab'
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const token = await getToken({ req })
+  console.log(token)
   if (!token?.accessToken) {
     return {props: {}}
   }
+
   const api = new ynab.API(token.accessToken)
 
-  const userData = await api.categories.getCategories('default')
+  const categories = api.categories.getCategories('default')
+  const accounts = api.accounts.getAccounts('default')
+  const payees = api.accounts.getAccounts('default')
+  const userData = await Promise.all([accounts, categories, payees])
 
   return {
     props: {
@@ -21,23 +24,12 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   }
 }
 
-const Home: NextPage<{userData?: string}> = (props) => {
+const Home: NextPage<{userData?: [ynab.AccountsResponse, ynab.CategoriesResponse, ynab.PayeesResponse]}> = (props) => {
 
   const session = useSession()
-  const { isLoading, error, data: token } = useQuery(['token'], () => {
-    fetch("http://localhost:3000/api/token")
-  })
-
-  if (error) {
-    return (
-      <div>
-        {JSON.stringify(error)}
-      </div>
-    )
-  }
 
   if (props.userData) {
-    return <div>{JSON.stringify(props.userData)}</div>
+    return <pre>{JSON.stringify(props.userData[0].data.accounts, null, 4)}</pre>
   }
 
   if (session.data) {
@@ -46,7 +38,6 @@ const Home: NextPage<{userData?: string}> = (props) => {
         Signed in. Session data: <br />
         {JSON.stringify(session)}
         <button onClick={() => signOut()}>Sign out</button>
-        {JSON.stringify(token)}
       </>
     )
   }
