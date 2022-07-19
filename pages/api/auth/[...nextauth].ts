@@ -4,7 +4,7 @@ import { JWT } from "next-auth/jwt"
 async function refreshAccessToken(token: JWT) {
     try {
         const url =
-            "https://app.youneedabudget.com/oauth/token" +
+            "https://app.youneedabudget.com/oauth/token?" +
             new URLSearchParams({
                 grant_type: "refresh_token",
                 client_id: process.env.CLIENT_ID as string,
@@ -49,7 +49,7 @@ export default NextAuth({
             if (account) {
                 token.accessToken = account.access_token
                 token.refreshToken = account.refresh_token
-                token.accessTokenExpires= Date.now() + account.expires_at * 1000
+                token.accessTokenExpires= account.expires_at * 1000
                 return token
             }
 
