@@ -28,7 +28,7 @@ async function refreshAccessToken(token: JWT) {
         return {
             ...token,
             accessToken: refreshedTokens.access_token,
-            accessTokenExpires: Date.now() + refreshedTokens.expires_at * 1000,
+            accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
             refreshToken: refreshedTokens.refresh_token ?? token.refreshToken
         }
     } catch (err) {
@@ -60,6 +60,10 @@ export default NextAuth({
 
             // Access token has expired, try to update it
             return refreshAccessToken(token)
+        },
+        async session({ session, token, user }) {
+            session.accessToken = token.accessToken
+            return session
         }
     },
     providers: [

@@ -3,31 +3,37 @@ import { getToken } from 'next-auth/jwt'
 import { signOut, useSession } from 'next-auth/react'
 import * as ynab from 'ynab'
 import {TextField, Autocomplete, Button, Box, Container} from '@mui/material'
+import { useQuery } from 'react-query'
+import { useEffect } from 'react'
 
-export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const token = await getToken({ req })
-  console.log(token)
-  if (!token?.accessToken) {
-    return { props: {} }
-  }
+// export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+//   const token = await getToken({ req })
+//   console.log(token)
+//   if (!token?.accessToken) {
+//     return { props: {} }
+//   }
 
-  const api = new ynab.API(token.accessToken)
+//   const api = new ynab.API(token.accessToken)
 
-  const categories = api.categories.getCategories('default')
-  const accounts = api.accounts.getAccounts('default')
-  const payees = api.accounts.getAccounts('default')
-  const userData = await Promise.all([accounts, categories, payees])
+//   const categories = await api.categories.getCategories('default')
 
-  return {
-    props: {
-      userData
-    }
-  }
-}
+//   return {
+//     props: {
+//       userData: categories
+//     }
+//   }
+// }
 
 const Home: NextPage<{ userData?: [ynab.AccountsResponse, ynab.CategoriesResponse, ynab.PayeesResponse] }> = (props) => {
 
   useSession({ required: true })
+  const { data } = useQuery('/api/categories', async () => {
+    return await (await fetch("/api/categories")).json()
+  })
+  
+  useEffect(() => {
+    console.log(data)
+  }, [data])
 
   return (
     <Container maxWidth="sm">
