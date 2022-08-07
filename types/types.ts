@@ -17,13 +17,23 @@ export interface Account {
 }
 
 export interface Payee {
-    id: string
-    label: string
+    id?: string
+    label?: string
     transferAccountId?: string | null
+    inputValue?: string
 }
 
 export interface TransactionOptions {
     accounts: Account[]
     payees: Payee[]
     categories: Category[]
+}
+
+export interface Transaction {
+    accountId: string,
+    data: string,
+    ammount: number,
+    payeeId?: string,
+    payeeName: string,
+    categoryId: string
 }

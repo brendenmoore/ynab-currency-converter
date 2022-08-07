@@ -2,16 +2,7 @@ import { NextApiHandler } from "next";
 import { getToken } from "next-auth/jwt";
 import * as ynab from 'ynab'
 
-interface RequestBody {
-    accountId: string,
-    data: string,
-    ammount: number,
-    payeeId?: string,
-    payeeName: string,
-    categoryId: string
-}
-
-const addTransaction: NextApiHandler<RequestBody> = async (req, res) => {
+const addTransaction: NextApiHandler = async (req, res) => {
     const token = await getToken({ req })
     if (!token?.accessToken) {
         return res.redirect("/api/auth/signin")
@@ -31,5 +22,6 @@ const addTransaction: NextApiHandler<RequestBody> = async (req, res) => {
             category_id: 'string',
         }
     })
-
 }
+
+export default addTransaction
