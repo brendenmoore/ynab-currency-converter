@@ -8,6 +8,7 @@ import { Account, Category, Payee, Transaction, TransactionOptions } from '../ty
 import { DatePicker } from '@mui/x-date-pickers'
 import { DateTime } from 'luxon'
 import NumberFormat, { InputAttributes } from 'react-number-format';
+import { SaveTransactionsResponse, SaveTransactionsResponseData } from 'ynab'
 
 export const getServerSideProps: GetServerSideProps<{ transactionOptions?: TransactionOptions, error?: any }> = async ({ req }) => {
 
@@ -59,6 +60,7 @@ export const getServerSideProps: GetServerSideProps<{ transactionOptions?: Trans
     const [categories, payees, accounts] = await Promise.all([categoryPromise, payeesPromise, accountsPromise])
     return {
       props: {
+        apiKey: token.accessToken,
         transactionOptions: {
           categories,
           payees,
@@ -70,6 +72,7 @@ export const getServerSideProps: GetServerSideProps<{ transactionOptions?: Trans
     console.log(err)
     return {
       props: {
+        apiKey: token.accessToken,
         error: err
       }
     }
@@ -78,19 +81,49 @@ export const getServerSideProps: GetServerSideProps<{ transactionOptions?: Trans
 
 const payeeFilter = createFilterOptions<Payee>()
 
-const Home: NextPage<{ transactionOptions?: TransactionOptions, error?: any }> = ({ transactionOptions, error }) => {
+const Home: NextPage<{ apiKey: string, transactionOptions?: TransactionOptions, error?: any }> = ({ apiKey, transactionOptions, error }) => {
 
   const [date, setDate] = useState<DateTime | null>(DateTime.now())
   const [account, setAccount] = useState<Account | null>(null)
   const [payee, setPayee] = useState<Payee | string | null>(null)
   const [category, setCategory] = useState<Category | null>(null)
   const [amount, setAmount] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [response, setResponse] = useState<SaveTransactionsResponse | null>(null)
 
   const handleSubmit = async () => {
-    axios.post()
-    // const data: Transaction = {
-    //   account_id: event.target.account
-    // }
+    if (!date || !account || !payee || !category || !amount) {
+      setErrorMessage("Missing Data")
+      return
+    }
+    const api = new ynab.API(apiKey)
+
+    let payeeId: string | null = null
+    let payeeName: string
+    if (typeof payee !== 'string') {
+      payeeId = payee.id || null
+      payeeName = payee.label
+    } else {
+      payeeName = payee
+    }
+    try {
+      const response = await api.transactions.createTransaction("default", {
+          transaction: {
+              account_id: account.id,
+              date: date.toISODate(),
+              amount: parseInt(amount) * 1000,
+              payee_id: payeeId,
+              payee_name: payeeName,
+              category_id: category.id,
+          }
+      })
+      setResponse(response)
+    } catch(err) {
+      console.log(err)
+      setErrorMessage("api response error")
+    }
+
+    
   }
 
   if (error || !transactionOptions) {
@@ -118,7 +151,6 @@ const Home: NextPage<{ transactionOptions?: TransactionOptions, error?: any }> =
               setAmount(e.target.value)
             }}
             name="numberformat"
-            id="formatted-numberformat-input"
             InputProps={{
               startAdornment: <InputAdornment position='start'>$</InputAdornment>,
               inputComponent: NumberFormatCustom as any,
@@ -156,6 +188,14 @@ const Home: NextPage<{ transactionOptions?: TransactionOptions, error?: any }> =
           <Autocomplete options={transactionOptions.categories} value={category} onChange={(event, value) => setCategory(value)} groupBy={(option) => option.groupName} renderInput={(params) => <TextField {...params} label="Category" />}></Autocomplete>
           <Button onClick={handleSubmit} variant="contained">Add Transaction</Button>
         </Stack>
+        {errorMessage && (
+          <Typography color="error">{errorMessage}</Typography>
+        )}
+        {response && (
+          <pre>
+            {JSON.stringify(response, null, 2)}
+          </pre>
+        )}
       </Container>
     </Box>
   )

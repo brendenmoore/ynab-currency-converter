@@ -18,7 +18,7 @@ export interface Account {
 
 export interface Payee {
     id?: string
-    label?: string
+    label: string
     transferAccountId?: string | null
     inputValue?: string
 }
