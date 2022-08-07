@@ -108,22 +108,27 @@ const Home: NextPage<{ apiKey: string, transactionOptions?: TransactionOptions, 
     }
     try {
       const response = await api.transactions.createTransaction("default", {
-          transaction: {
-              account_id: account.id,
-              date: date.toISODate(),
-              amount: parseInt(amount) * 1000,
-              payee_id: payeeId,
-              payee_name: payeeName,
-              category_id: category.id,
-          }
+        transaction: {
+          account_id: account.id,
+          date: date.toISODate(),
+          amount: parseInt(amount) * 1000,
+          payee_id: payeeId,
+          payee_name: payeeName,
+          category_id: category.id,
+        }
       })
       setResponse(response)
-    } catch(err) {
+      setErrorMessage(null)
+      setPayee(null)
+      setCategory(null)
+      setAmount("0.00")
+    } catch (err) {
       console.log(err)
-      setErrorMessage("api response error")
+      setResponse(null)
+      setErrorMessage("An Error has Occured. Please reach out to admin@bmoore.dev")
     }
 
-    
+
   }
 
   if (error || !transactionOptions) {
@@ -187,15 +192,15 @@ const Home: NextPage<{ apiKey: string, transactionOptions?: TransactionOptions, 
           />
           <Autocomplete options={transactionOptions.categories} value={category} onChange={(event, value) => setCategory(value)} groupBy={(option) => option.groupName} renderInput={(params) => <TextField {...params} label="Category" />}></Autocomplete>
           <Button onClick={handleSubmit} variant="contained">Add Transaction</Button>
+          {errorMessage && (
+            <Typography color="error">{errorMessage}</Typography>
+          )}
+          {response && (
+            <Typography color="success">
+              Transaction Added
+            </Typography>
+          )}
         </Stack>
-        {errorMessage && (
-          <Typography color="error">{errorMessage}</Typography>
-        )}
-        {response && (
-          <pre>
-            {JSON.stringify(response, null, 2)}
-          </pre>
-        )}
       </Container>
     </Box>
   )
