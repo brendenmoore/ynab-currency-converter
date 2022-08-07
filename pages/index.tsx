@@ -7,8 +7,6 @@ import React, { useState } from 'react'
 import { Account, Category, Payee, Transaction, TransactionOptions } from '../types/types'
 import { DatePicker } from '@mui/x-date-pickers'
 import { DateTime } from 'luxon'
-import CurrencyInput from 'react-currency-input-field';
-import { CurrencyInputOnChangeValues } from 'react-currency-input-field/dist/components/CurrencyInputProps'
 import NumberFormat, { InputAttributes } from 'react-number-format';
 
 export const getServerSideProps: GetServerSideProps<{ transactionOptions?: TransactionOptions, error?: any }> = async ({ req }) => {
@@ -89,7 +87,7 @@ const Home: NextPage<{ transactionOptions?: TransactionOptions, error?: any }> =
   const [amount, setAmount] = useState<string | null>(null)
 
   const handleSubmit = async () => {
-    console.log(amount)
+    axios.post()
     // const data: Transaction = {
     //   account_id: event.target.account
     // }
