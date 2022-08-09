@@ -183,13 +183,17 @@ const Home: NextPage<{
       if (transactionOptions.currency.iso_code === currencySelection.iso_code) {
         convertedAmount = parseFloat(amount) * 1000
       } else {
+        const isNegative = parseFloat(amount) < 0
         const url = new URL("https://api.exchangerate.host/convert")
         url.searchParams.append("from", currencySelection.iso_code)
         url.searchParams.append("to", transactionOptions.currency.iso_code)
-        url.searchParams.append("amount", amount)
+        url.searchParams.append("amount", Math.abs(parseFloat(amount)).toString())
         url.searchParams.append("date", date.toISODate())
         const response = (await axios.get<{result: number}>(url.toString())).data
         convertedAmount = Math.floor(response.result * 1000)
+        if (isNegative) {
+          convertedAmount = -convertedAmount
+        }
       }
     } catch(err) {
       console.log(err);
