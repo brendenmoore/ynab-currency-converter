@@ -1,5 +1,5 @@
 import type { GetServerSideProps, NextPage } from 'next'
-import { getToken } from 'next-auth/jwt'
+import { getToken, JWT } from 'next-auth/jwt'
 import { signOut } from 'next-auth/react'
 import * as ynab from 'ynab'
 import { TextField, Autocomplete, Button, Container, Stack, Typography, Box, createFilterOptions, InputAdornment } from '@mui/material'
@@ -9,10 +9,11 @@ import { DatePicker } from '@mui/x-date-pickers'
 import { DateTime } from 'luxon'
 import NumberFormat, { InputAttributes } from 'react-number-format';
 import { SaveTransactionsResponse, SaveTransactionsResponseData } from 'ynab'
+import { refreshAccessToken } from './api/auth/[...nextauth]'
 
 export const getServerSideProps: GetServerSideProps<{ transactionOptions?: TransactionOptions, error?: any }> = async ({ req }) => {
 
-  const token = await getToken({ req })
+  let token = await getToken({ req })
   if (!token?.accessToken) {
     return {
       redirect: {
@@ -20,6 +21,19 @@ export const getServerSideProps: GetServerSideProps<{ transactionOptions?: Trans
         permanent: false
       }
     }
+  }
+
+  if (Date.now() > token.accessTokenExpires) {
+    const newToken = await refreshAccessToken(token)
+    if (newToken.error) {
+      return {
+        redirect: {
+          destination: "/api/auth/signin",
+          permanent: false
+        }
+      }
+    }
+    token = newToken
   }
 
   try {
@@ -134,6 +148,7 @@ const Home: NextPage<{ apiKey: string, transactionOptions?: TransactionOptions, 
   if (error || !transactionOptions) {
     return (
       <Container>
+        {JSON.stringify(error, null, 2)}
         <Typography my={2} variant="h4" color="error">Error</Typography>
         <Typography>An unknown error has occured. Please reach out to <a href="mailto:admin@bmoore.dev">admin@bmoore.dev</a> for support.</Typography>
       </Container>

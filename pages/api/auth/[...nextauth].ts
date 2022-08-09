@@ -1,7 +1,7 @@
 import NextAuth, { Awaitable, User } from "next-auth"
 import { JWT } from "next-auth/jwt"
 
-async function refreshAccessToken(token: JWT) {
+export async function refreshAccessToken(token: JWT): Promise<JWT> {
     try {
         const url =
             "https://app.youneedabudget.com/oauth/token?" +
