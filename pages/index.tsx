@@ -255,7 +255,6 @@ const Home: NextPage<{
         >
           Sign out
         </Button>
-        <a href="https://app.youneedabudget.com">YNAB</a>
       </Box>
       <Container
         maxWidth='sm'
