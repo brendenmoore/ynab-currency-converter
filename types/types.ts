@@ -1,3 +1,5 @@
+import { CurrencyFormat } from "ynab"
+
 export interface Category {
     id: string
     label: string
@@ -27,6 +29,7 @@ export interface TransactionOptions {
     accounts: Account[]
     payees: Payee[]
     categories: Category[]
+    currency: CurrencyFormat
 }
 
 export interface Transaction {
