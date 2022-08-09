@@ -103,9 +103,11 @@ const Home: NextPage<{ apiKey: string, transactionOptions?: TransactionOptions, 
   const [category, setCategory] = useState<Category | null>(null)
   const [amount, setAmount] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   const [response, setResponse] = useState<SaveTransactionsResponse | null>(null)
 
   const handleSubmit = async () => {
+    setSubmitting(true)
     if (!date || !account || !payee || !category || !amount) {
       setErrorMessage("Missing Data")
       return
@@ -135,14 +137,13 @@ const Home: NextPage<{ apiKey: string, transactionOptions?: TransactionOptions, 
       setErrorMessage(null)
       setPayee(null)
       setCategory(null)
-      setAmount("0.00")
+      setAmount(null)
     } catch (err) {
       console.log(err)
       setResponse(null)
       setErrorMessage("An Error has Occured. Please reach out to admin@bmoore.dev")
     }
-
-
+    setSubmitting(false)
   }
 
   if (error || !transactionOptions) {
@@ -161,61 +162,64 @@ const Home: NextPage<{ apiKey: string, transactionOptions?: TransactionOptions, 
         <Button sx={{ position: 'absolute', right: 3 }} onClick={() => signOut()}>Sign out</Button>
       </Box>
       <Container maxWidth="sm" sx={{ minHeight: '95vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <Stack spacing={3}>
-          <Typography>Add a Transaction</Typography>
-          <DatePicker label="Date" value={date} onChange={newDate => setDate(newDate)} renderInput={(params) => <TextField {...params} />} />
-          <TextField
-            label="Amount"
-            value={amount}
-            onChange={(e) => {
-              setAmount(e.target.value)
-            }}
-            name="numberformat"
-            InputProps={{
-              startAdornment: <InputAdornment position='start'>$</InputAdornment>,
-              inputComponent: NumberFormatCustom as any,
-            }}
-          />
-          <Autocomplete options={transactionOptions.accounts} value={account} onChange={(event, value) => setAccount(value)} renderInput={(params) => <TextField {...params} label="Account" />}></Autocomplete>
-          <Autocomplete
-            freeSolo
-            selectOnFocus
-            clearOnBlur
-            handleHomeEndKeys
-            options={transactionOptions.payees}
-            value={payee}
-            onChange={(event, newValue) => {
-              if (typeof newValue === 'string') {
-                setPayee(newValue)
-              } else if (newValue && newValue.inputValue) {
-                setPayee(newValue.inputValue)
-              }
-            }}
-            filterOptions={(options, params) => {
-              const filtered = payeeFilter(options, params)
-              const { inputValue } = params
-              const isExisting = options.some((option) => inputValue === option.label)
-              if (inputValue !== '' && !isExisting) {
-                filtered.push({
-                  inputValue,
-                  label: `Add "${inputValue}"`
-                })
-              }
-              return filtered
-            }}
-            renderInput={(params) => <TextField {...params} label="Payee" />}
-          />
-          <Autocomplete options={transactionOptions.categories} value={category} onChange={(event, value) => setCategory(value)} groupBy={(option) => option.groupName} renderInput={(params) => <TextField {...params} label="Category" />}></Autocomplete>
-          <Button onClick={handleSubmit} variant="contained">Add Transaction</Button>
-          {errorMessage && (
-            <Typography color="error">{errorMessage}</Typography>
-          )}
-          {response && (
-            <Typography color="success">
-              Transaction Added
-            </Typography>
-          )}
-        </Stack>
+          <Stack spacing={3}>
+            <Typography>Add a Transaction</Typography>
+            <DatePicker disableFuture minDate={DateTime.now().minus({years: 5})} disabled={submitting} label="Date" value={date} onChange={newDate => setDate(newDate)} renderInput={(params) => <TextField {...params} />} />
+            <TextField
+            disabled={submitting}
+              label="Amount"
+              value={amount}
+              onChange={(e) => {
+                setAmount(e.target.value)
+              }}
+              name="numberformat"
+              InputProps={{
+                startAdornment: <InputAdornment position='start'>$</InputAdornment>,
+                inputComponent: NumberFormatCustom as any,
+              }}
+            />
+            <Autocomplete disabled={submitting} options={transactionOptions.accounts} value={account} onChange={(event, value) => setAccount(value)} renderInput={(params) => <TextField {...params} label="Account" />}></Autocomplete>
+            <Autocomplete
+            disabled={submitting}
+              freeSolo
+              selectOnFocus
+              clearOnBlur
+              handleHomeEndKeys
+              autoHighlight
+              options={transactionOptions.payees}
+              value={payee}
+              onChange={(event, newValue) => {
+                if (typeof newValue !== 'string' && newValue?.inputValue) {
+                  setPayee(newValue.inputValue)
+                } else {
+                  setPayee(newValue)
+                }
+              }}
+              filterOptions={(options, params) => {
+                const filtered = payeeFilter(options, params)
+                const { inputValue } = params
+                const isExisting = options.some((option) => inputValue === option.label)
+                if (inputValue !== '' && !isExisting) {
+                  filtered.push({
+                    inputValue,
+                    label: `Add "${inputValue}"`
+                  })
+                }
+                return filtered
+              }}
+              renderInput={(params) => <TextField {...params} label="Payee" />}
+            />
+            <Autocomplete disabled={submitting} options={transactionOptions.categories} value={category} onChange={(event, value) => setCategory(value)} groupBy={(option) => option.groupName} renderInput={(params) => <TextField {...params} label="Category" />}></Autocomplete>
+            <Button disabled={submitting} onClick={handleSubmit} variant="contained">Add Transaction</Button>
+            {errorMessage && (
+              <Typography color="error">{errorMessage}</Typography>
+            )}
+            {response && (
+              <Typography color="success">
+                Transaction Added
+              </Typography>
+            )}
+          </Stack>
       </Container>
     </Box>
   )
