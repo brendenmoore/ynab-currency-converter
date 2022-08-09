@@ -110,6 +110,7 @@ const Home: NextPage<{ apiKey: string, transactionOptions?: TransactionOptions, 
     setSubmitting(true)
     if (!date || !account || !payee || !category || !amount) {
       setErrorMessage("Missing Data")
+      setSubmitting(false)
       return
     }
     const api = new ynab.API(apiKey)
@@ -137,7 +138,7 @@ const Home: NextPage<{ apiKey: string, transactionOptions?: TransactionOptions, 
       setErrorMessage(null)
       setPayee(null)
       setCategory(null)
-      setAmount(null)
+      setAmount("")
     } catch (err) {
       console.log(err)
       setResponse(null)
@@ -165,6 +166,7 @@ const Home: NextPage<{ apiKey: string, transactionOptions?: TransactionOptions, 
           <Stack spacing={3}>
             <Typography>Add a Transaction</Typography>
             <DatePicker disableFuture minDate={DateTime.now().minus({years: 5})} disabled={submitting} label="Date" value={date} onChange={newDate => setDate(newDate)} renderInput={(params) => <TextField {...params} />} />
+            <Autocomplete disabled={submitting} options={transactionOptions.accounts} value={account} onChange={(event, value) => setAccount(value)} renderInput={(params) => <TextField {...params} label="Account" />}></Autocomplete>
             <TextField
             disabled={submitting}
               label="Amount"
@@ -178,7 +180,6 @@ const Home: NextPage<{ apiKey: string, transactionOptions?: TransactionOptions, 
                 inputComponent: NumberFormatCustom as any,
               }}
             />
-            <Autocomplete disabled={submitting} options={transactionOptions.accounts} value={account} onChange={(event, value) => setAccount(value)} renderInput={(params) => <TextField {...params} label="Account" />}></Autocomplete>
             <Autocomplete
             disabled={submitting}
               freeSolo
